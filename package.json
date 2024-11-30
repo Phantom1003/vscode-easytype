@@ -1,10 +1,15 @@
 {
   "name": "easytype",
   "displayName": "EasyType",
-  "description": "",
+  "description": "中文标点自动切换",
   "version": "0.0.1",
+  "publisher": "phantom",
   "engines": {
     "vscode": "^1.95.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Phantom1003/vscode-easytype"
   },
   "categories": [
     "Other"
