@@ -3,21 +3,43 @@ import * as vscode from 'vscode';
 export function activate(context: vscode.ExtensionContext) {
 	console.log('[*] EasyType is active!');
 
-    vscode.workspace.onDidChangeTextDocument(event => {
-        // console.log('[*] Detect text document changed.');
+	vscode.workspace.onDidChangeTextDocument(event => {
+		// console.log('[*] Detect text document changed.');
 		detectTextChange(event);
-    });
+	});
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
+
+let convert_map = new Map([
+	['，', ','], 
+	['。', '.'], 
+	['、', '\\'], 
+	['（', '('],
+	['）', ')'],
+	['《', '<'],
+	['》', '>'],
+	['【', '['],
+	['】', ']'],
+	['：', ':'],
+	['；', ';'],
+	['？', '?'],
+	['！', '!'],
+	['‘', '\''],
+	['’', '\''],
+	['“', '"'],
+	['”', '"'],
+	['￥', '$'],
+	['…', '^'],
+]);
 
 function detectTextChange(event: vscode.TextDocumentChangeEvent): void {
 	if (!vscode.window.activeTextEditor) {
 		console.log('No active text editor.');
-	  	return;
+		return;
 	}
-	
+
 	if (event.reason) {
 		console.log("Ignore event with reason: " + event.reason);
 		return;
@@ -27,16 +49,22 @@ function detectTextChange(event: vscode.TextDocumentChangeEvent): void {
 		const changedText = change.text;
 		console.log(changedText);
 
-		if (changedText === '、') {
+		if ([ ...convert_map.keys() ].includes(changedText)) {
 			const startPosition = change.range.start;
 			if (startPosition.character > 0) {
 				const previousText = event.document.getText(new vscode.Range(startPosition.translate(0, -1), startPosition));
 
-				if (previousText === '、') {
+				if ((previousText === changedText) ||
+					((previousText === '“') && (changedText === '”')) ||
+					((previousText === '‘') && (changedText === '’'))
+				) {
 					const edit = new vscode.WorkspaceEdit();
 					const range = new vscode.Range(startPosition.translate(0, -1), startPosition.translate(0, 1));
-					edit.replace(event.document.uri, range, '\\');
-					vscode.workspace.applyEdit(edit);
+					const replacementText = convert_map.get(changedText);
+					if (replacementText) {
+						edit.replace(event.document.uri, range, replacementText);
+						vscode.workspace.applyEdit(edit);
+					}
 				}
 			}
 		}
